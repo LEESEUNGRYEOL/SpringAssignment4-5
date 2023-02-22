@@ -34,6 +34,7 @@ public class UserService {
     // 요구사항 1) 회원가입 기능 (ver. Builder, ResponseEntity)
     @Transactional
     public ResponseEntity<BaseResponseDto> signup(SignupRequestDto signupRequestDto) throws CustomException {
+
         // 1) SignupRequestDto 를 통해서 Client 에게 username 과 password 를 전달받고, User의 Role 지정.
         String username = signupRequestDto.getUsername();
         String password = passwordEncoder.encode(signupRequestDto.getPassword());

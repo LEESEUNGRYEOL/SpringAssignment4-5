@@ -37,9 +37,6 @@ public class Blog extends Timestamped {
     @OrderBy("createdAt DESC")
     private List< Comment> commentList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
-    private List<BlogLike> blogLikeList = new ArrayList<>();
-
     // 생성자.
     @Builder
     private Blog(BlogRequestDto blogRequestDto, User user) {

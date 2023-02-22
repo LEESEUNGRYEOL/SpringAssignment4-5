@@ -28,7 +28,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // 1. 토큰을 가져온다.
         String token = jwtUtil.resolveToken(request);
-
         // 2. 토큰이 있는지 없는지 확인.
         if(token != null) {
             // 2-1. 토큰 검증에 오류가 있다면.
