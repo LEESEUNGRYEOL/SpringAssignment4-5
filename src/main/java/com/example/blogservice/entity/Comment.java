@@ -34,17 +34,19 @@ public class Comment extends Timestamped {
         this.user = user;
         this.blog = blog;
     }
+
     public void update (CommentRequestDto commentRequestDto, User user)
     {
         this.content = commentRequestDto.getContent();
         this.user = user;
     }
 
-    public static Comment of(CommentRequestDto commentRequestDto,User user)
+    public static Comment of(CommentRequestDto commentRequestDto,User user,Blog blog)
     {
         return Comment.builder()
                 .commentRequestDto(commentRequestDto)
                 .user(user)
+                .blog(blog)
                 .build();
     }
 

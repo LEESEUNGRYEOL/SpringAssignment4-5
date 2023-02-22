@@ -14,15 +14,15 @@ public class CommentResponseDto {
     private Long id;
     private String content;
     private String username;
-    private LocalDateTime createdat;
-    private LocalDateTime modifiedat;
+    private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
     private Long commentLikeCount;
     @Builder
     private CommentResponseDto(Comment comment, Long commentLikeCount) {
         this.id = comment.getId();
         this.content = comment.getContent();
-        this.createdat = comment.getCreatedAt();
-        this.modifiedat = comment.getModifiedAt();
+        this.createdAt = comment.getCreatedAt();
+        this.modifiedAt = comment.getModifiedAt();
         this.username = comment.getUser().getUsername();
         this.commentLikeCount = commentLikeCount;
     }
@@ -30,10 +30,9 @@ public class CommentResponseDto {
     private CommentResponseDto(Comment comment) {
         this.id = comment.getId();
         this.content = comment.getContent();
-        this.createdat = comment.getCreatedAt();
-        this.modifiedat = comment.getModifiedAt();
+        this.createdAt = comment.getCreatedAt();
+        this.modifiedAt = comment.getModifiedAt();
         this.username = comment.getUser().getUsername();
-        this.commentLikeCount = 0L;
     }
 
     public static CommentResponseDto from(Comment comment, Long commentLikeCount)
@@ -48,6 +47,7 @@ public class CommentResponseDto {
     {
         return CommentResponseDto.builder()
                 .comment(comment)
+                .commentLikeCount(0L)
                 .build();
     }
 

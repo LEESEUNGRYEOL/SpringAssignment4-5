@@ -35,11 +35,10 @@ public class CommentService {
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_BLOG)
         );
-        Comment comment = commentRepository.save(Comment.of(commentRequestDto,user));
+        Comment comment = commentRepository.save(Comment.of(commentRequestDto,user,blog));
         return ResponseEntity.ok()
                 .body(CommentResponseDto.from(comment));
     }
-
     // 요구사항 2) 댓글 수정
     @Transactional
     public ResponseEntity<CommentResponseDto> updateComment(Long id, CommentRequestDto commentRequestDto, User user) {

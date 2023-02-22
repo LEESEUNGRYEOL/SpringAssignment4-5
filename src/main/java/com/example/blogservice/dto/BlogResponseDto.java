@@ -45,7 +45,6 @@ public class BlogResponseDto {
         this.username = blog.getUser().getUsername();
         this.createdAt = blog.getCreatedAt();
         this.modifiedAt = blog.getModifiedAt();
-        this.blogLike = 0L;
     }
 
     public static BlogResponseDto from(Blog blog, List<CommentResponseDto> commentList, Long blogLike) {
@@ -60,6 +59,8 @@ public class BlogResponseDto {
     {
         return BlogResponseDto.builder()
                 .blog(blog)
+                .blogLike(0L)
+                .commentList(new ArrayList<>())
                 .build();
     }
 
