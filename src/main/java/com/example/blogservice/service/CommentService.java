@@ -9,6 +9,7 @@ import com.example.blogservice.repository.BlogRepository;
 import com.example.blogservice.repository.CommentLikeRepository;
 import com.example.blogservice.repository.CommentRepository;
 import com.example.blogservice.util.CustomException;
+import com.example.blogservice.util.SuccessCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,30 +25,25 @@ import static com.example.blogservice.util.ErrorCode.*;
 @Service
 @RequiredArgsConstructor
 public class CommentService {
-    // 1) CommentRepo 의존성 주입.
     private final CommentRepository commentRepository;
     private final BlogRepository blogRepository;
     private final CommentLikeRepository commentLikeRepository;
 
-    // 요구사항 1) 댓글 작성
     @Transactional
     public ResponseEntity<CommentResponseDto> createComment(Long id, CommentRequestDto commentRequestDto, User user) {
-        Blog blog = blogRepository.findById(id).orElseThrow(
-                () -> new CustomException(NOT_FOUND_BLOG)
-        );
-        Comment comment = commentRepository.save(Comment.of(commentRequestDto,user,blog));
+        Optional <Blog> blog = blogRepository.findById(id);
+        if(blog.isEmpty())
+        {
+            throw new CustomException(NOT_FOUND_BLOG);
+        }
+        Comment comment = commentRepository.save(Comment.of(commentRequestDto,user,blog.get()));
         return ResponseEntity.ok()
                 .body(CommentResponseDto.from(comment));
     }
-    // 요구사항 2) 댓글 수정
     @Transactional
     public ResponseEntity<CommentResponseDto> updateComment(Long id, CommentRequestDto commentRequestDto, User user) {
 
-        Blog blog = blogRepository.findById(id).orElseThrow(
-                () -> new CustomException(NOT_FOUND_COMMENT)
-        );
         UserRoleEnum userRoleEnum = user.getRole();
-
         Optional<Comment> comment;
 
         if (userRoleEnum == UserRoleEnum.ADMIN) {
@@ -55,7 +51,6 @@ public class CommentService {
             if (comment.isEmpty()) { // 일치하는 댓글이 없다면
                 throw new CustomException(NOT_FOUND_COMMENT);
             }
-
         } else {
             comment = commentRepository.findByIdAndUserId(id, user.getId());
             if (comment.isEmpty()) { // 일치하는 댓글이 없다면
@@ -116,18 +111,11 @@ public class CommentService {
         if (commentLike.isEmpty()) {
             commentLikeRepository.saveAndFlush(CommentLike.of(comment, user));
             return ResponseEntity.ok()
-                    .body(BaseResponseDto.builder()
-                            .statusCode(HttpStatus.OK.value())
-                            .msg("댓글 좋아요 선택")
-                            .build()
-                    );
+                    .body(BaseResponseDto.of(SuccessCode.LIKE_SUCCESS));
         } else {
             commentLikeRepository.deleteByCommentIdAndUserId(id, user.getId());
             return ResponseEntity.ok()
-                    .body(BaseResponseDto.builder()
-                            .statusCode((HttpStatus.OK.value()))
-                            .msg("댓글 좋아요 취소")
-                            .build()
+                    .body(BaseResponseDto.of(SuccessCode.NOT_LIKE_SUCCESS)
                     );
 
         }

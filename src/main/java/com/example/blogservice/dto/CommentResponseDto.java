@@ -27,14 +27,6 @@ public class CommentResponseDto {
         this.commentLikeCount = commentLikeCount;
     }
 
-    private CommentResponseDto(Comment comment) {
-        this.id = comment.getId();
-        this.content = comment.getContent();
-        this.createdAt = comment.getCreatedAt();
-        this.modifiedAt = comment.getModifiedAt();
-        this.username = comment.getUser().getUsername();
-    }
-
     public static CommentResponseDto from(Comment comment, Long commentLikeCount)
     {
         return CommentResponseDto.builder()

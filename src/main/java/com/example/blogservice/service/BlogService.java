@@ -7,6 +7,8 @@ import com.example.blogservice.repository.BlogLikeRepository;
 import com.example.blogservice.repository.BlogRepository;
 import com.example.blogservice.repository.CommentLikeRepository;
 import com.example.blogservice.util.CustomException;
+import com.example.blogservice.util.ErrorCode;
+import com.example.blogservice.util.SuccessCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,26 +36,24 @@ public class BlogService {
     public ResponseEntity<List<BlogResponseDto>> getBlogs() {
 
         List<Blog> blogList = blogRepository.findAllByOrderByCreatedAtAsc();
-        List<BlogResponseDto> allResponseDtoList = new ArrayList<>();
+        List<BlogResponseDto> blogResponseList = new ArrayList<>();
 
         for (Blog blog : blogList) {
             List<CommentResponseDto> commentList = new ArrayList<>();
             for (Comment comment : blog.getCommentList()) {
-                commentList.add(CommentResponseDto.from(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
+                commentList.add(CommentResponseDto.from(comment, commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
             }
-            Long blogLikes = blogLikeRepository.countBlogLikesByBlogId(blog.getId());
-            allResponseDtoList.add(BlogResponseDto.from(blog, commentList, blogLikes));
+            blogResponseList.add(BlogResponseDto.from(blog, commentList, blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
         }
-
         return ResponseEntity.ok()
-                .body(allResponseDtoList);
+                .body(blogResponseList);
     }
 
     // 요구사항 2) 게시글 작성
     @Transactional
     public ResponseEntity<BlogResponseDto> createBlog(BlogRequestDto blogrequestDto, User user) {
 
-        Blog blog = blogRepository.saveAndFlush(Blog.of(blogrequestDto,user));
+        Blog blog = blogRepository.saveAndFlush(Blog.of(blogrequestDto, user));
 
         return ResponseEntity.ok()
                 .body(BlogResponseDto.from(blog));
@@ -64,49 +64,50 @@ public class BlogService {
     @Transactional(readOnly = true)
     public ResponseEntity<BlogResponseDto> getBlogs(Long id) {
 
-        // 1) id 를 사용하여 DB 조회 및 유무 판단.
-        Blog blog = blogRepository.findById(id).orElseThrow(
-                () -> new CustomException(NOT_FOUND_BLOG)
-        );
-
-        // 2) 가져온 blog 에 Comment 들을 CommentList 에 추가.
-        List<CommentResponseDto> commentList = new ArrayList<>();
-        for (Comment comment : blog.getCommentList()) {
-            commentList.add(CommentResponseDto.from
-                    (comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
+        Optional<Blog> blog = blogRepository.findById(id);
+        if (blog.isEmpty()) {
+            throw new CustomException(NOT_FOUND_BLOG);
         }
 
-        // 3) ResponseEntity 에 Body 부분에 만든 객체 전달.
+        List<CommentResponseDto> commentList = new ArrayList<>();
+        for (Comment comment : blog.get().getCommentList()) {
+            commentList.add(CommentResponseDto.from
+                    (comment, commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
+        }
+
         return ResponseEntity.ok()
-                .body(BlogResponseDto.from(blog, commentList,blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
+                .body(BlogResponseDto.from(blog.get(), commentList, blogLikeRepository.countBlogLikesByBlogId(blog.get().getId())));
     }
 
     // 요구사항4. 선택한 게시글 수정
     @Transactional
     public ResponseEntity<BlogResponseDto> updateBlog(Long id, BlogRequestDto blogRequestDto, User user) {
         UserRoleEnum userRoleEnum = user.getRole();
-        Blog blog;
+        Optional<Blog> blog;
+        List<CommentResponseDto> commentList = new ArrayList<>();
 
         if (userRoleEnum == UserRoleEnum.ADMIN) {
-            // 입력 받은 게시글 id와 일치하는 DB 조회
-            blog = blogRepository.findById(id).orElseThrow(
-                    () -> new CustomException(NOT_FOUND_BLOG)
-            );
-
+            blog = blogRepository.findById(id);
+            if(blog.isEmpty())
+            {
+                throw new CustomException(NOT_FOUND_BLOG);
+            }
         } else {
-            // 입력 받은 게시글 id, 토큰에서 가져온 userId와 일치하는 DB 조회
-            blog = blogRepository.findByIdAndUserId(id, user.getId()).orElseThrow(
-                    () -> new CustomException(AUTHORIZATION)
-            );
+            blog = blogRepository.findByIdAndUserId(id, user.getId());
+            if(blog.isEmpty())
+            {
+                throw  new CustomException(AUTHORIZATION);
+            }
         }
-        blog.update(blogRequestDto, user);
 
-        List<CommentResponseDto> commentList = new ArrayList<>();
-        for (Comment comment : blog.getCommentList()) {
-            commentList.add(CommentResponseDto.from(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));      }
+        blog.get().update(blogRequestDto, user);
+
+        for (Comment comment : blog.get().getCommentList()) {
+            commentList.add(CommentResponseDto.from(comment, commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
+        }
 
         return ResponseEntity.ok()
-                .body(BlogResponseDto.from(blog, commentList,blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
+                .body(BlogResponseDto.from(blog.get(), commentList, blogLikeRepository.countBlogLikesByBlogId(blog.get().getId())));
     }
 
     // 요구사항5. 선택한 게시글 삭제
@@ -114,32 +115,33 @@ public class BlogService {
     public ResponseEntity<BaseResponseDto> deleteBlog(Long id, User user) {
 
         UserRoleEnum userRoleEnum = user.getRole();
-        Blog blog;
+        Optional<Blog> blog;
+
         if (userRoleEnum == UserRoleEnum.ADMIN) {
-            // 입력 받은 게시글 id와 일치하는 DB 조회
-            blog = blogRepository.findById(id).orElseThrow(
-                    () -> new CustomException(NOT_FOUND_BLOG)
-            );
+            blog = blogRepository.findById(id);
+            if(blog.isEmpty())
+            {
+                throw new CustomException(NOT_FOUND_BLOG);
+            }
         } else {
-            // 입력 받은 게시글 id, 토큰에서 가져온 userId와 일치하는 DB 조회
-            blog = blogRepository.findByIdAndUserId(id, user.getId()).orElseThrow(
-                    () -> new CustomException(AUTHORIZATION)
-            );
+            blog = blogRepository.findByIdAndUserId(id, user.getId());
+            if(blog.isEmpty())
+            {
+                throw  new CustomException(AUTHORIZATION);
+            }
         }
+
         blogRepository.deleteById(id);
-        // 4) ResponseEntity에 Body 부분에 만든 객체 전달.
+
         return ResponseEntity.ok()
-                .body(BaseResponseDto.builder()
-                        .statusCode(HttpStatus.OK.value())
-                        .msg("게시글 삭제 성공.")
-                        .build()
-                );
+                .body(BaseResponseDto.of(SuccessCode.BLOG_DELETE_SUCCESS));
 
     }
 
     // 요구사항 6. 게시물 좋아요
     @Transactional
     public ResponseEntity<BaseResponseDto> createBlogLike(Long id, User user) {
+
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_BLOG)
         );
@@ -148,19 +150,11 @@ public class BlogService {
         if (blogLike.isEmpty()) {
             blogLikeRepository.saveAndFlush(BlogLike.of(blog, user));
             return ResponseEntity.ok()
-                    .body(BaseResponseDto.builder()
-                            .statusCode(HttpStatus.OK.value())
-                            .msg("게시글 좋아요 선택")
-                            .build()
-                    );
+                    .body(BaseResponseDto.of(SuccessCode.LIKE_SUCCESS));
         } else {
             blogLikeRepository.deleteByBlogIdAndUserId(id, user.getId());
             return ResponseEntity.ok()
-                    .body(BaseResponseDto.builder()
-                            .statusCode((HttpStatus.OK.value()))
-                            .msg("게시글 좋아요 취소")
-                            .build()
-                    );
+                    .body(BaseResponseDto.of(SuccessCode.NOT_LIKE_SUCCESS));
         }
 
     }

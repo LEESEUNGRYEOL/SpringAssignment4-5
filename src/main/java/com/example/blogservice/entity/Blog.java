@@ -32,7 +32,6 @@ public class Blog extends Timestamped {
     @Column(nullable = false)
     private String content;
 
-
     @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
     @OrderBy("createdAt DESC")
     private List< Comment> commentList = new ArrayList<>();

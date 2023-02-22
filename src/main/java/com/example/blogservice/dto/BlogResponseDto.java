@@ -2,7 +2,6 @@ package com.example.blogservice.dto;
 
 
 import com.example.blogservice.entity.Blog;
-import com.example.blogservice.entity.Comment;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,36 +21,28 @@ public class BlogResponseDto {
     private String username;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
-    private Long blogLike;
+    private Long blogLikeCount;
 
     private List<CommentResponseDto> commentList = new ArrayList<>();
 
     @Builder
-    private BlogResponseDto(Blog blog, List<CommentResponseDto> commentList, Long blogLike) {
+    private BlogResponseDto(Blog blog, List<CommentResponseDto> commentList, Long blogLikeCount) {
         this.id = blog.getId();
         this.title = blog.getTitle();
         this.content = blog.getContent();
         this.username = blog.getUser().getUsername();
         this.createdAt = blog.getCreatedAt();
         this.modifiedAt = blog.getModifiedAt();
-        this.blogLike = blogLike;
+        this.blogLikeCount = blogLikeCount;
         this.commentList = commentList;
     }
 
-    private BlogResponseDto(Blog blog) {
-        this.id = blog.getId();
-        this.title = blog.getTitle();
-        this.content = blog.getContent();
-        this.username = blog.getUser().getUsername();
-        this.createdAt = blog.getCreatedAt();
-        this.modifiedAt = blog.getModifiedAt();
-    }
 
-    public static BlogResponseDto from(Blog blog, List<CommentResponseDto> commentList, Long blogLike) {
+    public static BlogResponseDto from(Blog blog, List<CommentResponseDto> commentList, Long blogLikeCount) {
         return BlogResponseDto.builder()
                 .blog(blog)
                 .commentList(commentList)
-                .blogLike(blogLike)
+                .blogLikeCount(blogLikeCount)
                 .build();
     }
 
@@ -59,7 +50,7 @@ public class BlogResponseDto {
     {
         return BlogResponseDto.builder()
                 .blog(blog)
-                .blogLike(0L)
+                .blogLikeCount(0L)
                 .commentList(new ArrayList<>())
                 .build();
     }
