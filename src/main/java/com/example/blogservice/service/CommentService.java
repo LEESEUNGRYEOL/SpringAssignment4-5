@@ -101,6 +101,7 @@ public class CommentService {
     }
     // 요구사항 4) 댓글 좋아요
     @Transactional
+
     public ResponseEntity<BaseResponseDto> createCommentLike(Long id, User user) {
 
         // 입력 받은 댓글 id와 일치하는 DB 조회
