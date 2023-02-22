@@ -1,11 +1,11 @@
 package com.example.blogservice.jwt;
 
+import com.example.blogservice.dto.BaseResponseDto;
+import com.example.blogservice.util.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.example.blogservice.dto.SecurityExceptionDto;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,7 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if(token != null) {
             // 2-1. 토큰 검증에 오류가 있다면.
             if(!jwtUtil.validateToken(token)){
-                jwtExceptionHandler(response, "Token Error", HttpStatus.UNAUTHORIZED.value());
+                jwtExceptionHandler(response, ErrorCode.INVALID_TOKEN);
                 return;
             }
             // 2-2. 토큰 검증에 오류가 없다면.
@@ -52,11 +52,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     // 4. 토큰이 오류가 났을때, 우리가 Custom 한 값으로 Exception 처리 값을 알려준다.
-    public void jwtExceptionHandler(HttpServletResponse response, String msg, int statusCode) {
-        response.setStatus(statusCode);
+    public void jwtExceptionHandler(HttpServletResponse response, ErrorCode errorCode) {
+        response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         try {
-            String json = new ObjectMapper().writeValueAsString(new SecurityExceptionDto(statusCode, msg));
+            String json = new ObjectMapper().writeValueAsString(BaseResponseDto.of(errorCode.getHttpStatus(),errorCode.getMsg()));
             response.getWriter().write(json);
         } catch (Exception e) {
             log.error(e.getMessage());

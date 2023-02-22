@@ -19,40 +19,46 @@ import java.util.List;
 @Getter // 클래스에 Property에 대한 getter 메서드를 자동으로 생성해주는 것.
 @Entity // Blog라는 클래스가 JPA Entity 클래스로 사용될 것이라는 것, 즉 데이터베이스에 저장할 데이터의 구조를 말한다.
 @NoArgsConstructor // 기본생성자를 자동으로 생성할 수 있게하는 Lombok 에서 사용하는 것.
-public class Blog extends Timestamped{
+public class Blog extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn (name = "USER_ID",nullable = false)
+    @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
-
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
-    @OrderBy("createdAt DESC")
-    private List<Comment> comments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
-    private List <BlogLike> blogLikes = new ArrayList<>();
+    @Column(nullable = false)
+    private String title;
     @Column(nullable = false)
     private String content;
 
-    @Column(nullable = false)
-    private String title;
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
+    @OrderBy("createdAt DESC")
+    private List< Comment> commentList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
+    private List<BlogLike> blogLikeList = new ArrayList<>();
 
     // 생성자.
     @Builder
-    public Blog (BlogRequestDto blogRequestDto, User user)
-    {
+    private Blog(BlogRequestDto blogRequestDto, User user) {
         this.content = blogRequestDto.getContent();
         this.title = blogRequestDto.getTitle();
         this.user = user;
     }
-    public void update (BlogRequestDto blogRequestDto, User user)
-    {
+
+    public void update(BlogRequestDto blogRequestDto, User user) {
         this.content = blogRequestDto.getContent();
         this.title = blogRequestDto.getTitle();
         this.user = user;
+    }
+
+    public static Blog of(BlogRequestDto blogRequestDto, User user) {
+        return Blog.builder()
+                .blogRequestDto(blogRequestDto)
+                .user(user)
+                .build();
     }
 
 }

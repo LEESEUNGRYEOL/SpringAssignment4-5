@@ -3,7 +3,7 @@ package com.example.blogservice.controller;
 
 import com.example.blogservice.dto.CommentRequestDto;
 import com.example.blogservice.dto.CommentResponseDto;
-import com.example.blogservice.dto.MessageResponseDto;
+import com.example.blogservice.dto.BaseResponseDto;
 import com.example.blogservice.security.UserDetailsImpl;
 import com.example.blogservice.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class CommentController {
 
     // 요구사항3) 댓글 삭제 API (DEL)
     @DeleteMapping("/comment/{id}")
-    public ResponseEntity<MessageResponseDto> deleteComment(
+    public ResponseEntity<BaseResponseDto> deleteComment(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return commentService.deleteComment(id, userDetails.getUser());
@@ -47,7 +47,7 @@ public class CommentController {
 
     // 요구사항4) 댓글 좋아요 API (POST)
     @PostMapping("/comment/like/{id}")
-    public ResponseEntity<MessageResponseDto> createCommentLike(
+    public ResponseEntity<BaseResponseDto> createCommentLike(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return commentService.createCommentLike(id, userDetails.getUser());

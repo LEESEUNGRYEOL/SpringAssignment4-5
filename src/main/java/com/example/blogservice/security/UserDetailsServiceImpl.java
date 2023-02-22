@@ -3,6 +3,7 @@ package com.example.blogservice.security;
 import com.example.blogservice.entity.User;
 import com.example.blogservice.repository.UserRepository;
 import com.example.blogservice.util.CustomException;
+import com.example.blogservice.util.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,7 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // 1. DB 에서 User 의 이름을 통해서 조홰함.
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new CustomException(NOT_FOUND_USER));
+                .orElseThrow(() -> new UsernameNotFoundException(ErrorCode.NOT_FOUND_USER.getMsg()));
         // 2. UserDetailsImpl 로 return.
         return new UserDetailsImpl(user, user.getUsername());
     }

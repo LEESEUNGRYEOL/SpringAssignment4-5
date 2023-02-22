@@ -17,18 +17,8 @@ public class CommentResponseDto {
     private LocalDateTime createdat;
     private LocalDateTime modifiedat;
     private Long commentLikeCount;
-
     @Builder
-    public CommentResponseDto(Comment comment) {
-        this.id = comment.getId();
-        this.content = comment.getContent();
-        this.createdat = comment.getCreatedAt();
-        this.modifiedat = comment.getModifiedAt();
-        this.username = comment.getUser().getUsername();
-        this.commentLikeCount = 0L;
-    }
-    @Builder
-    public CommentResponseDto(Comment comment,Long commentLikeCount) {
+    private CommentResponseDto(Comment comment, Long commentLikeCount) {
         this.id = comment.getId();
         this.content = comment.getContent();
         this.createdat = comment.getCreatedAt();
@@ -36,4 +26,29 @@ public class CommentResponseDto {
         this.username = comment.getUser().getUsername();
         this.commentLikeCount = commentLikeCount;
     }
+
+    private CommentResponseDto(Comment comment) {
+        this.id = comment.getId();
+        this.content = comment.getContent();
+        this.createdat = comment.getCreatedAt();
+        this.modifiedat = comment.getModifiedAt();
+        this.username = comment.getUser().getUsername();
+        this.commentLikeCount = 0L;
+    }
+
+    public static CommentResponseDto from(Comment comment, Long commentLikeCount)
+    {
+        return CommentResponseDto.builder()
+                .comment(comment)
+                .commentLikeCount(commentLikeCount)
+                .build();
+    }
+
+    public static CommentResponseDto from(Comment comment)
+    {
+        return CommentResponseDto.builder()
+                .comment(comment)
+                .build();
+    }
+
 }

@@ -58,9 +58,9 @@ public class WebSecurityConfig {
                 .and().addFilterBefore(new JwtAuthFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         // Spring Security 에서 우리가 커스텀한 로그인 페이지로 반환하는 것.
-        http.formLogin().loginPage("/api/user/login-page").permitAll();
-
-        http.exceptionHandling().accessDeniedPage("/api/user/forbidden");
+        http.formLogin().permitAll();
+//
+//        http.exceptionHandling().accessDeniedPage("/api/user/forbidden");
 
         return http.build();
     }

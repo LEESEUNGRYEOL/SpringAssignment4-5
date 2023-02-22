@@ -3,7 +3,7 @@ package com.example.blogservice.controller;
 
 
 import com.example.blogservice.dto.LoginRequestDto;
-import com.example.blogservice.dto.MessageResponseDto;
+import com.example.blogservice.dto.BaseResponseDto;
 import com.example.blogservice.dto.SignupRequestDto;
 import com.example.blogservice.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +26,14 @@ public class UserController {
 
     // 요구사항1) 회원 가입
     @PostMapping("/signup")
-    public ResponseEntity<MessageResponseDto> signup(@RequestBody @Valid SignupRequestDto signupRequestDto) {
+    public ResponseEntity<BaseResponseDto> signup(@RequestBody @Valid SignupRequestDto signupRequestDto) {
         return userService.signup(signupRequestDto);
     }
 
 
     // 요구사항2) 로그인
     @PostMapping("/login")
-    public ResponseEntity<MessageResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<BaseResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
         return userService.login(loginRequestDto);
     }
 }

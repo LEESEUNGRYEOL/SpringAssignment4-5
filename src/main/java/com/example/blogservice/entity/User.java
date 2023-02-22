@@ -26,9 +26,18 @@ public class User {
 
     // 생성자.
     @Builder
-    public User(String username, String password, UserRoleEnum role) {
+    private User(String username, String password, UserRoleEnum role) {
         this.username = username;
         this.password = password;
         this.role = role;
+    }
+
+    public static User of(String username, String password, UserRoleEnum role)
+    {
+        return User.builder()
+                .username(username)
+                .password(password)
+                .role(role)
+                .build();
     }
 }

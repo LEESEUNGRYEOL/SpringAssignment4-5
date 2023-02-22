@@ -1,10 +1,9 @@
 package com.example.blogservice.controller;
 
 
-import com.example.blogservice.dto.AllResponseDto;
 import com.example.blogservice.dto.BlogRequestDto;
 import com.example.blogservice.dto.BlogResponseDto;
-import com.example.blogservice.dto.MessageResponseDto;
+import com.example.blogservice.dto.BaseResponseDto;
 import com.example.blogservice.security.UserDetailsImpl;
 import com.example.blogservice.service.BlogService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,7 @@ public class BlogController {
 
     // 요구사항1) 전체 게시글 목록 조회 API (GET)
     @GetMapping("/blogs")
-    public ResponseEntity<List<AllResponseDto>> getBlogs() {
+    public ResponseEntity<List<BlogResponseDto>> getBlogs() {
         return blogService.getBlogs();
     }
 
@@ -55,7 +54,7 @@ public class BlogController {
 
     // 요구사항5) 선택한 게시글 삭제 API (DEL)
     @DeleteMapping("/blogs/{id}")
-    public ResponseEntity<MessageResponseDto> deleteBlog(
+    public ResponseEntity<BaseResponseDto> deleteBlog(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return blogService.deleteBlog(id, userDetails.getUser());
@@ -63,7 +62,7 @@ public class BlogController {
 
     // 요구사항6) 선택한 게시글 좋아요 표시 (POST)
     @PostMapping("/blogs/like/{id}")
-    public ResponseEntity<MessageResponseDto> createBlogLike(
+    public ResponseEntity<BaseResponseDto> createBlogLike(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return blogService.createBlogLike(id, userDetails.getUser());

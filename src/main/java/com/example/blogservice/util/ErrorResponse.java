@@ -10,15 +10,14 @@ import org.springframework.http.ResponseEntity;
 // 실제로 Client 에게 보내는 Format
 public class ErrorResponse {
     private final String msg;
-    private final int statuscode;
-
+    private final int statusCode;
 
     public static ResponseEntity<ErrorResponse> toResponseEntity(ErrorCode errorCode) {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ErrorResponse.builder()
                         .msg(errorCode.getMsg())
-                        .statuscode(errorCode.getHttpStatus().value())
+                        .statusCode(errorCode.getHttpStatus().value())
                         .build());
     }
 }

@@ -28,7 +28,7 @@ public class Comment extends Timestamped {
 
     // 생성자.
     @Builder
-    public Comment (CommentRequestDto commentRequestDto, User user, Blog blog)
+    private Comment (CommentRequestDto commentRequestDto, User user, Blog blog)
     {
         this.content = commentRequestDto.getContent();
         this.user = user;
@@ -39,4 +39,13 @@ public class Comment extends Timestamped {
         this.content = commentRequestDto.getContent();
         this.user = user;
     }
+
+    public static Comment of(CommentRequestDto commentRequestDto,User user)
+    {
+        return Comment.builder()
+                .commentRequestDto(commentRequestDto)
+                .user(user)
+                .build();
+    }
+
 }

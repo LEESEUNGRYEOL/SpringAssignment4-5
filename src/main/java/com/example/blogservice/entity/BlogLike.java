@@ -1,6 +1,7 @@
 package com.example.blogservice.entity;
 
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,9 +23,18 @@ public class BlogLike {
     @JoinColumn(name = "USER_ID",nullable = false)
     private User user;
 
-    public BlogLike(Blog blog, User user)
+    @Builder
+    private BlogLike(Blog blog, User user)
     {
         this.blog =blog;
         this.user = user;
+    }
+
+    public static BlogLike of(Blog blog, User user)
+    {
+        return BlogLike.builder()
+                .blog(blog)
+                .user(user)
+                .build();
     }
 }

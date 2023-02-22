@@ -2,6 +2,8 @@ package com.example.blogservice.dto;
 
 
 import com.example.blogservice.entity.Blog;
+import com.example.blogservice.entity.Comment;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,7 +26,19 @@ public class BlogResponseDto {
 
     private List<CommentResponseDto> commentList = new ArrayList<>();
 
-    public BlogResponseDto(Blog blog) {
+    @Builder
+    private BlogResponseDto(Blog blog, List<CommentResponseDto> commentList, Long blogLike) {
+        this.id = blog.getId();
+        this.title = blog.getTitle();
+        this.content = blog.getContent();
+        this.username = blog.getUser().getUsername();
+        this.createdAt = blog.getCreatedAt();
+        this.modifiedAt = blog.getModifiedAt();
+        this.blogLike = blogLike;
+        this.commentList = commentList;
+    }
+
+    private BlogResponseDto(Blog blog) {
         this.id = blog.getId();
         this.title = blog.getTitle();
         this.content = blog.getContent();
@@ -34,15 +48,19 @@ public class BlogResponseDto {
         this.blogLike = 0L;
     }
 
-    public BlogResponseDto(Blog blog, List<CommentResponseDto> commentList, Long blogLike) {
-        this.id = blog.getId();
-        this.title = blog.getTitle();
-        this.content = blog.getContent();
-        this.username = blog.getUser().getUsername();
-        this.createdAt = blog.getCreatedAt();
-        this.modifiedAt = blog.getModifiedAt();
-        this.blogLike = blogLike;
-        this.commentList = commentList;
+    public static BlogResponseDto from(Blog blog, List<CommentResponseDto> commentList, Long blogLike) {
+        return BlogResponseDto.builder()
+                .blog(blog)
+                .commentList(commentList)
+                .blogLike(blogLike)
+                .build();
+    }
+
+    public static BlogResponseDto from(Blog blog)
+    {
+        return BlogResponseDto.builder()
+                .blog(blog)
+                .build();
     }
 
 }

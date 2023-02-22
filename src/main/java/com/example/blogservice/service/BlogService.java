@@ -31,21 +31,20 @@ public class BlogService {
     // 요구사항 1)  전체 게시글 목록 조회
     @Transactional(readOnly = true)
 
-    public ResponseEntity<List<AllResponseDto>> getBlogs() {
-        // 1) 객체먼저 선언.
-        List<Blog> blogList = blogRepository.findAllByOrderByCreatedAtAsc();
-        List<AllResponseDto> allResponseDtoList = new ArrayList<>();
+    public ResponseEntity<List<BlogResponseDto>> getBlogs() {
 
-        // 2) 하나의 블로그글 마다 그 comment들을 전부 가져옴.
+        List<Blog> blogList = blogRepository.findAllByOrderByCreatedAtAsc();
+        List<BlogResponseDto> allResponseDtoList = new ArrayList<>();
+
         for (Blog blog : blogList) {
-            List<CommentResponseDto> commentList = new ArrayList<>(); // 위에다가 선언을할시에는 객체 초기화가 안되서 중복이됨.
-            for (Comment comment : blog.getComments()) {
-                commentList.add(new CommentResponseDto(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
+            List<CommentResponseDto> commentList = new ArrayList<>();
+            for (Comment comment : blog.getCommentList()) {
+                commentList.add(CommentResponseDto.from(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
             }
             Long blogLikes = blogLikeRepository.countBlogLikesByBlogId(blog.getId());
-            allResponseDtoList.add(new AllResponseDto(blog, commentList, blogLikes));
+            allResponseDtoList.add(BlogResponseDto.from(blog, commentList, blogLikes));
         }
-        // 3) ResponseEntity에 Body 부분에 allResponeseDtoList 를 넣음.
+
         return ResponseEntity.ok()
                 .body(allResponseDtoList);
     }
@@ -53,30 +52,33 @@ public class BlogService {
     // 요구사항 2) 게시글 작성
     @Transactional
     public ResponseEntity<BlogResponseDto> createBlog(BlogRequestDto blogrequestDto, User user) {
-        Blog blog = blogRepository.saveAndFlush(Blog.builder()
-                .blogRequestDto(blogrequestDto)
-                .user(user)
-                .build());
+
+        Blog blog = blogRepository.saveAndFlush(Blog.of(blogrequestDto,user));
+
         return ResponseEntity.ok()
-                .body(new BlogResponseDto(blog));
+                .body(BlogResponseDto.from(blog));
     }
 
 
     // 요구사항 3)  선택한 게시글 조회
     @Transactional(readOnly = true)
     public ResponseEntity<BlogResponseDto> getBlogs(Long id) {
+
         // 1) id 를 사용하여 DB 조회 및 유무 판단.
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_BLOG)
         );
-        // 2) 가져온 blog 에 Comment들을 CommentList 에 추가.
+
+        // 2) 가져온 blog 에 Comment 들을 CommentList 에 추가.
         List<CommentResponseDto> commentList = new ArrayList<>();
-        for (Comment comment : blog.getComments()) {
-            commentList.add(new CommentResponseDto(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
+        for (Comment comment : blog.getCommentList()) {
+            commentList.add(CommentResponseDto.from
+                    (comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));
         }
-        // 3) ResponseEntity에 Body 부분에 만든 객체 전달.
+
+        // 3) ResponseEntity 에 Body 부분에 만든 객체 전달.
         return ResponseEntity.ok()
-                .body(new BlogResponseDto(blog, commentList,blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
+                .body(BlogResponseDto.from(blog, commentList,blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
     }
 
     // 요구사항4. 선택한 게시글 수정
@@ -100,16 +102,16 @@ public class BlogService {
         blog.update(blogRequestDto, user);
 
         List<CommentResponseDto> commentList = new ArrayList<>();
-        for (Comment comment : blog.getComments()) {
-            commentList.add(new CommentResponseDto(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));      }
+        for (Comment comment : blog.getCommentList()) {
+            commentList.add(CommentResponseDto.from(comment,commentLikeRepository.countCommentLikesByCommentId(comment.getId())));      }
 
         return ResponseEntity.ok()
-                .body(new BlogResponseDto(blog, commentList,blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
+                .body(BlogResponseDto.from(blog, commentList,blogLikeRepository.countBlogLikesByBlogId(blog.getId())));
     }
 
     // 요구사항5. 선택한 게시글 삭제
     @Transactional
-    public ResponseEntity<MessageResponseDto> deleteBlog(Long id, User user) {
+    public ResponseEntity<BaseResponseDto> deleteBlog(Long id, User user) {
 
         UserRoleEnum userRoleEnum = user.getRole();
         Blog blog;
@@ -127,7 +129,7 @@ public class BlogService {
         blogRepository.deleteById(id);
         // 4) ResponseEntity에 Body 부분에 만든 객체 전달.
         return ResponseEntity.ok()
-                .body(MessageResponseDto.builder()
+                .body(BaseResponseDto.builder()
                         .statusCode(HttpStatus.OK.value())
                         .msg("게시글 삭제 성공.")
                         .build()
@@ -137,16 +139,16 @@ public class BlogService {
 
     // 요구사항 6. 게시물 좋아요
     @Transactional
-    public ResponseEntity<MessageResponseDto> createBlogLike(Long id, User user) {
+    public ResponseEntity<BaseResponseDto> createBlogLike(Long id, User user) {
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_BLOG)
         );
 
         Optional<BlogLike> blogLike = blogLikeRepository.findByBlogIdAndUserId(id, user.getId());
         if (blogLike.isEmpty()) {
-            blogLikeRepository.saveAndFlush(new BlogLike(blog, user));
+            blogLikeRepository.saveAndFlush(BlogLike.of(blog, user));
             return ResponseEntity.ok()
-                    .body(MessageResponseDto.builder()
+                    .body(BaseResponseDto.builder()
                             .statusCode(HttpStatus.OK.value())
                             .msg("게시글 좋아요 선택")
                             .build()
@@ -154,7 +156,7 @@ public class BlogService {
         } else {
             blogLikeRepository.deleteByBlogIdAndUserId(id, user.getId());
             return ResponseEntity.ok()
-                    .body(MessageResponseDto.builder()
+                    .body(BaseResponseDto.builder()
                             .statusCode((HttpStatus.OK.value()))
                             .msg("게시글 좋아요 취소")
                             .build()

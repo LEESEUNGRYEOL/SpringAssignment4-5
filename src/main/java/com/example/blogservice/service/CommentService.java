@@ -3,7 +3,7 @@ package com.example.blogservice.service;
 
 import com.example.blogservice.dto.CommentRequestDto;
 import com.example.blogservice.dto.CommentResponseDto;
-import com.example.blogservice.dto.MessageResponseDto;
+import com.example.blogservice.dto.BaseResponseDto;
 import com.example.blogservice.entity.*;
 import com.example.blogservice.repository.BlogRepository;
 import com.example.blogservice.repository.CommentLikeRepository;
@@ -35,13 +35,9 @@ public class CommentService {
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_BLOG)
         );
-        Comment comment = commentRepository.save(Comment.builder()
-                .commentRequestDto(commentRequestDto)
-                .user(user)
-                .blog(blog)
-                .build());
+        Comment comment = commentRepository.save(Comment.of(commentRequestDto,user));
         return ResponseEntity.ok()
-                .body(new CommentResponseDto(comment));
+                .body(CommentResponseDto.from(comment));
     }
 
     // 요구사항 2) 댓글 수정
@@ -51,35 +47,31 @@ public class CommentService {
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_COMMENT)
         );
-        // 3) Admin 권한이 있는 친구는 전부 수정, 아닌경우 일부수정.
         UserRoleEnum userRoleEnum = user.getRole();
 
         Optional<Comment> comment;
 
-        // 3-1) Admin 권환인 경우.
         if (userRoleEnum == UserRoleEnum.ADMIN) {
             comment = commentRepository.findById(id);
             if (comment.isEmpty()) { // 일치하는 댓글이 없다면
                 throw new CustomException(NOT_FOUND_COMMENT);
             }
 
-        } else { // 3-2) User 권한인 경우.
+        } else {
             comment = commentRepository.findByIdAndUserId(id, user.getId());
             if (comment.isEmpty()) { // 일치하는 댓글이 없다면
                 throw new CustomException(NOT_FOUND_COMMENT);
             }
         }
-        // 4) Comment Update
         comment.get().update(commentRequestDto, user);
 
-        // 5) ResponseEntity에 Body 부분에 만든 객체 전달.
         return ResponseEntity.ok()
-                .body(new CommentResponseDto(comment.get(),commentLikeRepository.countCommentLikesByCommentId(comment.get().getId())));
+                .body(CommentResponseDto.from(comment.get(),commentLikeRepository.countCommentLikesByCommentId(comment.get().getId())));
     }
 
     // 요구사항 3) 댓글 삭제
     @Transactional
-    public ResponseEntity<MessageResponseDto> deleteComment(Long id, User user) {
+    public ResponseEntity<BaseResponseDto> deleteComment(Long id, User user) {
         // 게시글의 DB 저장 유무 확인
         Blog blog = blogRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_BLOG)
@@ -107,7 +99,7 @@ public class CommentService {
 
         // 5) ResponseEntity에 Body 부분에 만든 객체 전달.
         return ResponseEntity.ok()
-                .body(MessageResponseDto.builder()
+                .body(BaseResponseDto.builder()
                         .statusCode(HttpStatus.OK.value())
                         .msg("댓글 삭제 성공.")
                         .build()
@@ -115,7 +107,7 @@ public class CommentService {
     }
     // 요구사항 4) 댓글 좋아요
     @Transactional
-    public ResponseEntity<MessageResponseDto> createCommentLike(Long id, User user) {
+    public ResponseEntity<BaseResponseDto> createCommentLike(Long id, User user) {
 
         // 입력 받은 댓글 id와 일치하는 DB 조회
         Comment comment = commentRepository.findById(id).orElseThrow(
@@ -123,9 +115,9 @@ public class CommentService {
         );
         Optional<CommentLike> commentLike = commentLikeRepository.findByCommentIdAndUserId(id, user.getId());
         if (commentLike.isEmpty()) {
-            commentLikeRepository.saveAndFlush(new CommentLike(comment, user));
+            commentLikeRepository.saveAndFlush(CommentLike.of(comment, user));
             return ResponseEntity.ok()
-                    .body(MessageResponseDto.builder()
+                    .body(BaseResponseDto.builder()
                             .statusCode(HttpStatus.OK.value())
                             .msg("댓글 좋아요 선택")
                             .build()
@@ -133,7 +125,7 @@ public class CommentService {
         } else {
             commentLikeRepository.deleteByCommentIdAndUserId(id, user.getId());
             return ResponseEntity.ok()
-                    .body(MessageResponseDto.builder()
+                    .body(BaseResponseDto.builder()
                             .statusCode((HttpStatus.OK.value()))
                             .msg("댓글 좋아요 취소")
                             .build()

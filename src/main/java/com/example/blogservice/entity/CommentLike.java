@@ -25,12 +25,19 @@ public class CommentLike {
 
     // 생성자
     @Builder
-    public CommentLike(Comment comment, User user)
+    private CommentLike(Comment comment, User user)
     {
         this.comment = comment;
         this.user = user;
     }
 
+    public static CommentLike of(Comment comment, User user)
+    {
+        return CommentLike.builder()
+                .comment(comment)
+                .user(user)
+                .build();
+    }
 
 
 
