@@ -48,12 +48,12 @@ public class CommentService {
 
         if (userRoleEnum == UserRoleEnum.ADMIN) {
             comment = commentRepository.findById(id);
-            if (comment.isEmpty()) { // 일치하는 댓글이 없다면
+            if (comment.isEmpty()) {
                 throw new CustomException(NOT_FOUND_COMMENT);
             }
         } else {
             comment = commentRepository.findByIdAndUserId(id, user.getId());
-            if (comment.isEmpty()) { // 일치하는 댓글이 없다면
+            if (comment.isEmpty()) {
                 throw new CustomException(NOT_FOUND_COMMENT);
             }
         }
@@ -66,45 +66,33 @@ public class CommentService {
     // 요구사항 3) 댓글 삭제
     @Transactional
     public ResponseEntity<BaseResponseDto> deleteComment(Long id, User user) {
-        // 게시글의 DB 저장 유무 확인
-        Blog blog = blogRepository.findById(id).orElseThrow(
-                () -> new CustomException(NOT_FOUND_BLOG)
-        );
-
-        // 사용자 권한 가져와서 ADMIN 이면 무조건 수정 가능, USER 면 본인이 작성한 댓글일 때만 수정 가능
+        Optional <Blog> blog = blogRepository.findById(id);
+        if(blog.isEmpty())
+        {
+            throw new CustomException(NOT_FOUND_BLOG);
+        }
         UserRoleEnum userRoleEnum = user.getRole();
-
-        Comment comment;
+        Optional <Comment> comment;
 
         if (userRoleEnum == UserRoleEnum.ADMIN) {
-            // 입력 받은 댓글 id와 일치하는 DB 조회
-            comment = commentRepository.findById(id).orElseThrow(
-                    () -> new CustomException(NOT_FOUND_COMMENT)
-            );
+            comment = commentRepository.findById(id);
+            if (comment.isEmpty()) {
+                throw new CustomException(NOT_FOUND_COMMENT);
+            }
         } else {
-            // 입력 받은 댓글 id, 토큰에서 가져온 userId와 일치하는 DB 조회
-            comment = commentRepository.findByIdAndUserId(id, user.getId()).orElseThrow(
-                    () -> new CustomException(AUTHORIZATION)
-            );
+            comment = commentRepository.findByIdAndUserId(id, user.getId());
+            if (comment.isEmpty()) {
+                throw new CustomException(NOT_FOUND_COMMENT);
+            }
         }
 
-        // 4) Comment Delete
         commentRepository.deleteById(id);
-
-        // 5) ResponseEntity에 Body 부분에 만든 객체 전달.
         return ResponseEntity.ok()
-                .body(BaseResponseDto.builder()
-                        .statusCode(HttpStatus.OK.value())
-                        .msg("댓글 삭제 성공.")
-                        .build()
-                );
+                .body(BaseResponseDto.of(SuccessCode.COMMENT_DELETE_SUCCESS));
     }
-    // 요구사항 4) 댓글 좋아요
     @Transactional
-
     public ResponseEntity<BaseResponseDto> createCommentLike(Long id, User user) {
 
-        // 입력 받은 댓글 id와 일치하는 DB 조회
         Comment comment = commentRepository.findById(id).orElseThrow(
                 () -> new CustomException(NOT_FOUND_COMMENT)
         );
@@ -116,8 +104,7 @@ public class CommentService {
         } else {
             commentLikeRepository.deleteByCommentIdAndUserId(id, user.getId());
             return ResponseEntity.ok()
-                    .body(BaseResponseDto.of(SuccessCode.NOT_LIKE_SUCCESS)
-                    );
+                    .body(BaseResponseDto.of(SuccessCode.NOT_LIKE_SUCCESS));
 
         }
 
